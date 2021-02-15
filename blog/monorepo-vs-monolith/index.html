@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="ie=edge"/><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/><style data-href="/styles.0339cedbd83b75940c4f.css" id="gatsby-global-css">@font-face{font-family:CustomFont;src:url(/static/Roboto-Regular-11eabca2251325cfc5589c9c6fb57b46.ttf)}*{font-family:CustomFont,Arial,sans-serif;font-weight:400;font-style:normal;line-height:1.6}body,html{text-size-adjust:none;-webkit-text-size-adjust:none;-moz-text-size-adjust:none;-ms-text-size-adjust:none}a{color:red}.links a{text-transform:uppercase}ul.tags{padding:0;list-style-type:none}ul.tags li{display:inline-block;background:#92d3f5;padding:0 .5rem;margin:.25rem;border-radius:3px}.markdown pre{overflow:scroll;background:#d3d3d3;border-left:4px solid red;padding:1em .5em}.markdown code{font-family:Fira Mono,DejaVu Sans Mono,Menlo,Consolas,Liberation Mono,Monaco,Lucida Console,monospace}</style><meta name="generator" content="Gatsby 2.32.3"/><title data-react-helmet="true">Monorepo vs Monolith | Luke 10X</title><meta data-react-helmet="true" name="description" content="Full Stack Developer and Code Instructor"/><meta data-react-helmet="true" property="og:title" content="Monorepo vs Monolith"/><meta data-react-helmet="true" property="og:description" content="Full Stack Developer and Code Instructor"/><meta data-react-helmet="true" property="og:type" content="website"/><meta data-react-helmet="true" property="og:url"/><meta data-react-helmet="true" property="og:image" content="/static/luke10x-8337dd5c233795156edb2256299abd21.png"/><meta data-react-helmet="true" name="twitter:card" content="summary"/><meta data-react-helmet="true" name="twitter:creator" content="@realLuke10X"/><meta data-react-helmet="true" name="twitter:title" content="Monorepo vs Monolith"/><meta data-react-helmet="true" name="twitter:description" content="Full Stack Developer and Code Instructor"/><meta data-react-helmet="true" name="og:site_name" content="Monorepo vs Monolith"/><meta data-react-helmet="true" name="twitter:image:alt" content="Monorepo vs Monolith"/><meta data-react-helmet="true" name="fb:app_id" content="your_app_id"/><meta data-react-helmet="true" name="twitter:site" content="@website-username"/><link as="script" rel="preload" href="/webpack-runtime-bf56b49f2b5527a85341.js"/><link as="script" rel="preload" href="/framework-5e01c8af6b1735c9eaa3.js"/><link as="script" rel="preload" href="/app-da0fe1086453c5492255.js"/><link as="script" rel="preload" href="/styles-e9d24b1846c7d6eb9685.js"/><link as="script" rel="preload" href="/commons-cf5582d3bd626988a1c0.js"/><link as="script" rel="preload" href="/component---src-templates-blog-template-js-93f31a22bdab1b484673.js"/><link as="fetch" rel="preload" href="/page-data/blog/monorepo-vs-monolith/page-data.json" crossorigin="anonymous"/><link as="fetch" rel="preload" href="/page-data/sq/d/3649515864.json" crossorigin="anonymous"/><link as="fetch" rel="preload" href="/page-data/sq/d/63159454.json" crossorigin="anonymous"/><link as="fetch" rel="preload" href="/page-data/app-data.json" crossorigin="anonymous"/></head><body><div id="___gatsby"><div style="outline:none" tabindex="-1" id="gatsby-focus-wrapper"><div class="sc-gsTCUz bhdLno"><header class="sc-bdfBwQ cIKpxU"><div class="titles"><h1>LUKE 10X</h1><h3>Fullstack developer &amp; code instructor</h3></div></header><a href="/blog">back</a><div class="blog-post-container"><div class="blog-post"><h1>Monorepo vs Monolith</h1><h2>February 08, 2021</h2><div class="markdown blog-post-content"><p>Two words that start with Mono, which is means One.</p>
+<p>What it means is that all your code goes to same repository.</p>
+<p>Opposed to polyrepo, where your source code is distributed into several separate repositories.</p>
+<p>[pic]</p>
+<p>Now the Monolith, is a word having same prefix as Monorepo, perhaps this is why is often confused,
+but it means something different.</p>
+<p>Monolith describes a software product, that is shipped and deployed together.</p>
+<p>This term comes from Microservices Architecture, but word monolith is defines something what is actually Opposite to a microservice.</p>
+<p>Clearly Monolith and Monorepo, these are two different concepts, they may intersect, but essentially they describe two different qualities.</p>
+<p>When software consists of different components,
+the way how it is organized in Version Control System may wary from Monorepo (all code is in one repository) to Polyrepo (each component has for it's repository).</p>
+<p>And then Monolith describes the way how the software is packaged, and shipped,-  which is one big deployment of software, no matter how many different responsibilities this package has, all is released in one go. It is opposed to microservices, where each of the microservice is deployed and released together.</p>
+<p>A software product may be described by both version-control and deployment strategies independently. Effectively, each software product may be organized in 4 different ways:</p>
+<h2>1. Monolith Monorepo</h2>
+<p>This is the simplest one, all code from single repository is deployed together. Mostly used by small projects. The software may serve different responsibilities (like backend and frontend), yet it is all deployed together.</p>
+<p>Pros:</p>
+<ul>
+<li>Easy to navigate through the code</li>
+<li>Simple deployment pipeline</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>May be difficult to maintain when project goes big, and starts to serve multiple responsibilities.</li>
+<li>Cannot scale deployment of different components independently</li>
+</ul>
+<h2>2. Monolith Polyrepo</h2>
+<p>This is same as one above, but it uses libraries and modules stored in external repositories. Compared to Monolith Monorepo this may have cleaner smaller code bases in each repo, which makes it easier to maintain. But it is still deployed all together at once.</p>
+<h2>3. Microservice Polyrepo</h2>
+<p>Here the application is distributed, we have components deployed separately, but the all are stored in one repository.</p>
+<p>Pros:</p>
+<ul>
+<li>Small size of the components</li>
+<li>Each component can be scaled independently</li>
+<li>Relatively simple build pipelines</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>It is not as easy to navigate through the code, or onboard new people</li>
+</ul>
+<h2>4. Microservice Monorepo</h2>
+<p>There is only one repository, yet all the components clearly separated, so that they can be released together.</p>
+<p>Pros:</p>
+<ul>
+<li>Small size of the components</li>
+<li>Each component can be scaled independently</li>
+<li>Code is easy to navigate through</li>
+<li>Onboarding of new team members is easier</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>Build pipelines are more complicated, because not all of the CI/CD tools have out-of-box monorepo support</li>
+</ul></div></div></div><footer><a href="/">Home</a> | <a href="/blog">Blog</a></footer></div></div><div id="gatsby-announcer" style="position:absolute;top:0;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border:0" aria-live="assertive" aria-atomic="true"></div></div><script id="gatsby-script-loader">/*<![CDATA[*/window.pagePath="/blog/monorepo-vs-monolith";/*]]>*/</script><script id="gatsby-chunk-mapping">/*<![CDATA[*/window.___chunkMapping={"polyfill":["/polyfill-e4957c11759bdfc149d9.js"],"app":["/app-da0fe1086453c5492255.js"],"component---src-pages-blog-js":["/component---src-pages-blog-js-bd586f0f8586ded14ba4.js"],"component---src-pages-index-js":["/component---src-pages-index-js-70f9e8f0d8a210722d88.js"],"component---src-templates-blog-template-js":["/component---src-templates-blog-template-js-93f31a22bdab1b484673.js"]};/*]]>*/</script><script src="/polyfill-e4957c11759bdfc149d9.js" nomodule=""></script><script src="/component---src-templates-blog-template-js-93f31a22bdab1b484673.js" async=""></script><script src="/commons-cf5582d3bd626988a1c0.js" async=""></script><script src="/styles-e9d24b1846c7d6eb9685.js" async=""></script><script src="/app-da0fe1086453c5492255.js" async=""></script><script src="/framework-5e01c8af6b1735c9eaa3.js" async=""></script><script src="/webpack-runtime-bf56b49f2b5527a85341.js" async=""></script></body></html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="ie=edge"/><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/><style data-href="/styles.0339cedbd83b75940c4f.css" id="gatsby-global-css">@font-face{font-family:CustomFont;src:url(/static/Roboto-Regular-11eabca2251325cfc5589c9c6fb57b46.ttf)}*{font-family:CustomFont,Arial,sans-serif;font-weight:400;font-style:normal;line-height:1.6}body,html{text-size-adjust:none;-webkit-text-size-adjust:none;-moz-text-size-adjust:none;-ms-text-size-adjust:none}a{color:red}.links a{text-transform:uppercase}ul.tags{padding:0;list-style-type:none}ul.tags li{display:inline-block;background:#92d3f5;padding:0 .5rem;margin:.25rem;border-radius:3px}.markdown pre{overflow:scroll;background:#d3d3d3;border-left:4px solid red;padding:1em .5em}.markdown code{font-family:Fira Mono,DejaVu Sans Mono,Menlo,Consolas,Liberation Mono,Monaco,Lucida Console,monospace}</style><meta name="generator" content="Gatsby 2.32.3"/><title data-react-helmet="true">Install debug symbols to fpm Docker container | Luke 10X</title><meta data-react-helmet="true" name="description" content="Full Stack Developer and Code Instructor"/><meta data-react-helmet="true" property="og:title" content="Install debug symbols to fpm Docker container"/><meta data-react-helmet="true" property="og:description" content="Full Stack Developer and Code Instructor"/><meta data-react-helmet="true" property="og:type" content="website"/><meta data-react-helmet="true" property="og:url"/><meta data-react-helmet="true" property="og:image" content="/static/luke10x-8337dd5c233795156edb2256299abd21.png"/><meta data-react-helmet="true" name="twitter:card" content="summary"/><meta data-react-helmet="true" name="twitter:creator" content="@realLuke10X"/><meta data-react-helmet="true" name="twitter:title" content="Install debug symbols to fpm Docker container"/><meta data-react-helmet="true" name="twitter:description" content="Full Stack Developer and Code Instructor"/><meta data-react-helmet="true" name="og:site_name" content="Install debug symbols to fpm Docker container"/><meta data-react-helmet="true" name="twitter:image:alt" content="Install debug symbols to fpm Docker container"/><meta data-react-helmet="true" name="fb:app_id" content="your_app_id"/><meta data-react-helmet="true" name="twitter:site" content="@website-username"/><link as="script" rel="preload" href="/webpack-runtime-bf56b49f2b5527a85341.js"/><link as="script" rel="preload" href="/framework-5e01c8af6b1735c9eaa3.js"/><link as="script" rel="preload" href="/app-da0fe1086453c5492255.js"/><link as="script" rel="preload" href="/styles-e9d24b1846c7d6eb9685.js"/><link as="script" rel="preload" href="/commons-cf5582d3bd626988a1c0.js"/><link as="script" rel="preload" href="/component---src-templates-blog-template-js-93f31a22bdab1b484673.js"/><link as="fetch" rel="preload" href="/page-data/blog/install-debug-symbols-to-php-fpm-docker-container/page-data.json" crossorigin="anonymous"/><link as="fetch" rel="preload" href="/page-data/sq/d/3649515864.json" crossorigin="anonymous"/><link as="fetch" rel="preload" href="/page-data/sq/d/63159454.json" crossorigin="anonymous"/><link as="fetch" rel="preload" href="/page-data/app-data.json" crossorigin="anonymous"/></head><body><div id="___gatsby"><div style="outline:none" tabindex="-1" id="gatsby-focus-wrapper"><div class="sc-gsTCUz bhdLno"><header class="sc-bdfBwQ cIKpxU"><div class="titles"><h1>LUKE 10X</h1><h3>Fullstack developer &amp; code instructor</h3></div></header><a href="/blog">back</a><div class="blog-post-container"><div class="blog-post"><h1>Install debug symbols to fpm Docker container</h1><h2>June 18, 2018</h2><div class="markdown blog-post-content"><p>Container images don't include debug symbols,
+perhaps it is more important to reduce size of the images.</p>
+<p>Unlike Debian that has all the <package>-dbg' packages
+(alternatively, it is possible to get <package>-dbgsym),
+Docker image vendors virtually never provide separate versions
+with debug symbols enabled. Wordpress official images are
+not exceptions.</p>
+<p>I can think of the following reasons why the vendors
+of the Docker container images don't consider
+interactive debugging as a must-have feature anymore:</p>
+<ul>
+<li>Debug symbols increase the image size;</li>
+<li>The code runs in the cloud, that means does not matter where it
+is actually running, so it is not clear how we can attach the
+debugger;</li>
+<li>Advanced paradigms, like async and coroutines make imperative
+stepping through instructions a technique that gives good
+insight of the runtime state.</li>
+<li>Similarly, the machine code may be optimized in a sophisticated
+way, so that throttling it to human speed would make it impossible
+to reproduce bugs anyway.</li>
+</ul>
+<p>However PHP is quite old and primitive, therefore it can still
+be the best to debug it with the good old GDB.</p>
+<p>Here, I will try to log, step-by-step what was required to do,
+in order to rebuild the image to include the debugging symbols at
+the same time reusing as much as possible from the original image,
+and not rebuilding everything from scratch.</p>
+<h2>Assess the situation</h2>
+<p>First we will double check that the debug symbols are not there originally:</p>
+<pre><code>root@63a355210d9b:/src# file /usr/local/sbin/php-fpm
+/usr/local/sbin/php-fpm: ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 2.6.32, BuildID[sha1]=3a1b578d90a949925775c0827920ff4205ee16e3, stripped
+</code></pre>
+<p>That "stripped" means that the binary does not include the debugging data.
+(also this can be checked using the 'objdump --syms')</p>
+<p>So debug symbols are not installed!</p>
+<p>As the image is Debian based, we can check if the php is installed as a package,
+as that would allow us just to install additional php-fpm-dbg package:</p>
+<pre><code>root@63a355210d9b:/src# dpkg -S $(which php-fpm) 
+dpkg-query: no path found matching pattern /usr/local/sbin/php-fpm
+</code></pre>
+<p>looks like no, also:</p>
+<pre><code>apt-file find $(which php-fpm)
+</code></pre>
+<p>does not print anything.</p>
+<p>So it is clear that PHP is not installed from the APT package.</p>
+<p>Nevertheless, checking the history, shows that indeed the message includes
+PHP compiled from sources:</p>
+<pre><code>docker history --no-trunc --format '{{.CreatedBy }}' wordpress:fpm
+...
+    /bin/sh -c set -xe  &#x26;&#x26; buildDeps="   $PHP_EXTRA_BUILD_DEPS   libargon2-0-dev   libcurl4-openssl-dev   libedit-dev   libsqlite3-dev   libssl-dev   libxml2-dev   zlib1g-dev  "  &#x26;&#x26; apt-get update &#x26;&#x26; apt-get install -y $buildDeps --no-install-recommends &#x26;&#x26; rm -rf /var/lib/apt/lists/*   &#x26;&#x26; export CFLAGS="$PHP_CFLAGS"   CPPFLAGS="$PHP_CPPFLAGS"   LDFLAGS="$PHP_LDFLAGS"  &#x26;&#x26; docker-php-source extract  &#x26;&#x26; cd /usr/src/php  &#x26;&#x26; gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"  &#x26;&#x26; debMultiarch="$(dpkg-architecture --query DEB_BUILD_MULTIARCH)"  &#x26;&#x26; if [ ! -d /usr/include/curl ]; then   ln -sT "/usr/include/$debMultiarch/curl" /usr/local/include/curl;  fi  &#x26;&#x26; ./configure   --build="$gnuArch"   --with-config-file-path="$PHP_INI_DIR"   --with-config-file-scan-dir="$PHP_INI_DIR/conf.d"     --disable-cgi     --enable-ftp   --enable-mbstring   --enable-mysqlnd   --with-password-argon2     --with-curl   --with-libedit   --with-openssl   --with-zlib     $(test "$gnuArch" = 's390x-linux-gnu' &#x26;&#x26; echo '--without-pcre-jit')   --with-libdir="lib/$debMultiarch"     $PHP_EXTRA_CONFIGURE_ARGS  &#x26;&#x26; make -j "$(nproc)"  &#x26;&#x26; make install  &#x26;&#x26; { find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true; }  &#x26;&#x26; make clean  &#x26;&#x26; cd /  &#x26;&#x26; docker-php-source delete   &#x26;&#x26; apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $buildDeps   &#x26;&#x26; pecl update-channels  &#x26;&#x26; rm -rf /tmp/pear ~/.pearrc
+...
+</code></pre>
+<p>So we will need to find the <a href="https://github.com/docker-library/php/blob/6677546d599d3980781b520f84d03ecaad291dd1/7.2/stretch/fpm/Dockerfile#L104-L166">original Dockerfile</a>,
+to see what command needs to be re-run for our custom image to include the symbols.</p>
+<p>We will have to put <a href="https://github.com/normantas/enchanted-lamp/blob/master/docker/wordpress/Dockerfile#L45-L46">our Dockerfile</a>,
+that recompiles the PHP with <code>--enable-debug</code> flag set.</p>
+<p>After the installation we need to rebuild plugins required for the Wordpress with <a href="https://github.com/normantas/enchanted-lamp/blob/master/docker/wordpress/Dockerfile#L61-L69">docker-php-ext-install</a>.</p>
+<p>And that is it! After rebuilding this image one should see:</p>
+<pre><code>file /usr/local/sbin/php-fpm
+/usr/local/sbin/php-fpm: ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 2.6.32, BuildID[sha1]=4f0f0802b93f011a3d1faa92be7e2c0d8646f78a, not stripped
+</code></pre>
+<p>Meaning that our image now can be debugged with GDB!</p></div></div></div><footer><a href="/">Home</a> | <a href="/blog">Blog</a></footer></div></div><div id="gatsby-announcer" style="position:absolute;top:0;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border:0" aria-live="assertive" aria-atomic="true"></div></div><script id="gatsby-script-loader">/*<![CDATA[*/window.pagePath="/blog/install-debug-symbols-to-php-fpm-docker-container";/*]]>*/</script><script id="gatsby-chunk-mapping">/*<![CDATA[*/window.___chunkMapping={"polyfill":["/polyfill-e4957c11759bdfc149d9.js"],"app":["/app-da0fe1086453c5492255.js"],"component---src-pages-blog-js":["/component---src-pages-blog-js-bd586f0f8586ded14ba4.js"],"component---src-pages-index-js":["/component---src-pages-index-js-70f9e8f0d8a210722d88.js"],"component---src-templates-blog-template-js":["/component---src-templates-blog-template-js-93f31a22bdab1b484673.js"]};/*]]>*/</script><script src="/polyfill-e4957c11759bdfc149d9.js" nomodule=""></script><script src="/component---src-templates-blog-template-js-93f31a22bdab1b484673.js" async=""></script><script src="/commons-cf5582d3bd626988a1c0.js" async=""></script><script src="/styles-e9d24b1846c7d6eb9685.js" async=""></script><script src="/app-da0fe1086453c5492255.js" async=""></script><script src="/framework-5e01c8af6b1735c9eaa3.js" async=""></script><script src="/webpack-runtime-bf56b49f2b5527a85341.js" async=""></script></body></html>

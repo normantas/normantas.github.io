@@ -1,0 +1,70 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="ie=edge"/><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/><style data-href="/styles.0339cedbd83b75940c4f.css" id="gatsby-global-css">@font-face{font-family:CustomFont;src:url(/static/Roboto-Regular-11eabca2251325cfc5589c9c6fb57b46.ttf)}*{font-family:CustomFont,Arial,sans-serif;font-weight:400;font-style:normal;line-height:1.6}body,html{text-size-adjust:none;-webkit-text-size-adjust:none;-moz-text-size-adjust:none;-ms-text-size-adjust:none}a{color:red}.links a{text-transform:uppercase}ul.tags{padding:0;list-style-type:none}ul.tags li{display:inline-block;background:#92d3f5;padding:0 .5rem;margin:.25rem;border-radius:3px}.markdown pre{overflow:scroll;background:#d3d3d3;border-left:4px solid red;padding:1em .5em}.markdown code{font-family:Fira Mono,DejaVu Sans Mono,Menlo,Consolas,Liberation Mono,Monaco,Lucida Console,monospace}</style><meta name="generator" content="Gatsby 2.32.3"/><title data-react-helmet="true">Freeze WebApp with database locks (and automate it with Expect) | Luke 10X</title><meta data-react-helmet="true" name="description" content="Full Stack Developer and Code Instructor"/><meta data-react-helmet="true" property="og:title" content="Freeze WebApp with database locks (and automate it with Expect)"/><meta data-react-helmet="true" property="og:description" content="Full Stack Developer and Code Instructor"/><meta data-react-helmet="true" property="og:type" content="website"/><meta data-react-helmet="true" property="og:url"/><meta data-react-helmet="true" property="og:image" content="/static/luke10x-8337dd5c233795156edb2256299abd21.png"/><meta data-react-helmet="true" name="twitter:card" content="summary"/><meta data-react-helmet="true" name="twitter:creator" content="@realLuke10X"/><meta data-react-helmet="true" name="twitter:title" content="Freeze WebApp with database locks (and automate it with Expect)"/><meta data-react-helmet="true" name="twitter:description" content="Full Stack Developer and Code Instructor"/><meta data-react-helmet="true" name="og:site_name" content="Freeze WebApp with database locks (and automate it with Expect)"/><meta data-react-helmet="true" name="twitter:image:alt" content="Freeze WebApp with database locks (and automate it with Expect)"/><meta data-react-helmet="true" name="fb:app_id" content="your_app_id"/><meta data-react-helmet="true" name="twitter:site" content="@website-username"/><link as="script" rel="preload" href="/webpack-runtime-bf56b49f2b5527a85341.js"/><link as="script" rel="preload" href="/framework-5e01c8af6b1735c9eaa3.js"/><link as="script" rel="preload" href="/app-da0fe1086453c5492255.js"/><link as="script" rel="preload" href="/styles-e9d24b1846c7d6eb9685.js"/><link as="script" rel="preload" href="/commons-cf5582d3bd626988a1c0.js"/><link as="script" rel="preload" href="/component---src-templates-blog-template-js-93f31a22bdab1b484673.js"/><link as="fetch" rel="preload" href="/page-data/blog/freeze-with-database-locks-using-expect/page-data.json" crossorigin="anonymous"/><link as="fetch" rel="preload" href="/page-data/sq/d/3649515864.json" crossorigin="anonymous"/><link as="fetch" rel="preload" href="/page-data/sq/d/63159454.json" crossorigin="anonymous"/><link as="fetch" rel="preload" href="/page-data/app-data.json" crossorigin="anonymous"/></head><body><div id="___gatsby"><div style="outline:none" tabindex="-1" id="gatsby-focus-wrapper"><div class="sc-gsTCUz bhdLno"><header class="sc-bdfBwQ cIKpxU"><div class="titles"><h1>LUKE 10X</h1><h3>Fullstack developer &amp; code instructor</h3></div></header><a href="/blog">back</a><div class="blog-post-container"><div class="blog-post"><h1>Freeze WebApp with database locks (and automate it with Expect)</h1><h2>February 20, 2018</h2><div class="markdown blog-post-content"><p>Each PHP-FPM workers serve web requests relentlessly.
+Sometimes it would be useful to pause a thread executing a
+specific script, so that the whole worker process could be
+stopped for some time and examined, (and later released to run again if needed).</p>
+<p>If that is a PHP app, setting a breakpoint in XDebug naturally
+feels like a way to achieve that. Yet, XDebug is not always available,-
+in fact it is not recommended to run it on production
+environment at all.</p>
+<p>However, webapps typically talk to databases. If any PHP script,
+is trying to write to a database record which is locked by another transaction,
+then it waits for the locking transaction to release the lock
+(which happens when transaction is committed or rolled back).</p>
+<p>Starting a transaction like this, but without ending it:</p>
+<pre><code>mysql> START TRANSACTION;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> UPDATE wp_posts SET post_content="Pending content..." WHERE id=1;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0 
+</code></pre>
+<p>will result in write lock on the record. Therefore a PHP script
+will be frozen when trying to write to that database record.</p>
+<p>Any web request that tries to write to the locked record,
+now will be blocked by the database lock.</p>
+<p>[[[ Here comes the picture ]]]</p>
+<h2>But this is too much of typing...</h2>
+<p>The problem is that to lock a record in this way requires so much effort:
+first the transaction has to be started,
+then the locking update query has to be executed,
+and this database connection has to be left as is,
+meanwhile the stopped process can be scrutinized.</p>
+<p>Also it is important to make sure the transaction is ended before disconnecting,
+otherwise it will remain open until its timeout.</p>
+<p>To spare some typing and window switching,
+the interaction with the mysql client could be automated using Expect:</p>
+<p>From its man-page:</p>
+<pre><code>Expect is a program that "talks" to other interactive programs
+according  to  a  script.   Following the script, Expect knows
+what can be expected from  a  program  and  what  the  correct
+response  should be.  An interpreted language provides branch‐
+ing and high-level control structures to direct the  dialogue.
+In  addition,  the user can take control and interact directly
+when desired, afterward returning control to the script.
+</code></pre>
+<p>We will create an Expect script:</p>
+<pre><code>#!/usr/bin/expect
+
+set timeout 105
+trap {
+        send "ROLLBACK;\rEXIT\r"; expect -exact "Bye"; exit 0
+} SIGINT
+
+spawn docker exec -it enchantedlamp_mysql_1 sh -c "exec mysql -uroot -p\"\$MYSQL_ROOT_PASSWORD\" wordpress"
+expect -exact "mysql>"
+send "START TRANSACTION;\r"
+expect -exact "mysql>"
+send "UPDATE wp_posts SET post_content='Pending content...' WHERE id=1;\r"
+expect -exact "mysql>"
+
+send_user "RECORD BLOCKED FOR 100s (C^ FOR EARLY EXIT)"
+send "\r"
+
+sleep 100
+expect -exact "mysql>"
+send "ROLLBACK;\rEXIT\r"; expect -exact "Bye"; exit 0
+</code></pre>
+<p>This script can be run like <code>./block-record.exp</code>,
+it will give 100s for debugging the frozen state.
+It can be exited earlier with Ctrl+C at any time though.</p>
+<p><a href="https://www.thegeekstuff.com/2010/10/expect-examples/">https://www.thegeekstuff.com/2010/10/expect-examples/</a></p></div></div></div><footer><a href="/">Home</a> | <a href="/blog">Blog</a></footer></div></div><div id="gatsby-announcer" style="position:absolute;top:0;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border:0" aria-live="assertive" aria-atomic="true"></div></div><script id="gatsby-script-loader">/*<![CDATA[*/window.pagePath="/blog/freeze-with-database-locks-using-expect";/*]]>*/</script><script id="gatsby-chunk-mapping">/*<![CDATA[*/window.___chunkMapping={"polyfill":["/polyfill-e4957c11759bdfc149d9.js"],"app":["/app-da0fe1086453c5492255.js"],"component---src-pages-blog-js":["/component---src-pages-blog-js-bd586f0f8586ded14ba4.js"],"component---src-pages-index-js":["/component---src-pages-index-js-70f9e8f0d8a210722d88.js"],"component---src-templates-blog-template-js":["/component---src-templates-blog-template-js-93f31a22bdab1b484673.js"]};/*]]>*/</script><script src="/polyfill-e4957c11759bdfc149d9.js" nomodule=""></script><script src="/component---src-templates-blog-template-js-93f31a22bdab1b484673.js" async=""></script><script src="/commons-cf5582d3bd626988a1c0.js" async=""></script><script src="/styles-e9d24b1846c7d6eb9685.js" async=""></script><script src="/app-da0fe1086453c5492255.js" async=""></script><script src="/framework-5e01c8af6b1735c9eaa3.js" async=""></script><script src="/webpack-runtime-bf56b49f2b5527a85341.js" async=""></script></body></html>

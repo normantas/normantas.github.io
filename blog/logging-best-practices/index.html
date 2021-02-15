@@ -1,0 +1,39 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="ie=edge"/><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/><style data-href="/styles.0339cedbd83b75940c4f.css" id="gatsby-global-css">@font-face{font-family:CustomFont;src:url(/static/Roboto-Regular-11eabca2251325cfc5589c9c6fb57b46.ttf)}*{font-family:CustomFont,Arial,sans-serif;font-weight:400;font-style:normal;line-height:1.6}body,html{text-size-adjust:none;-webkit-text-size-adjust:none;-moz-text-size-adjust:none;-ms-text-size-adjust:none}a{color:red}.links a{text-transform:uppercase}ul.tags{padding:0;list-style-type:none}ul.tags li{display:inline-block;background:#92d3f5;padding:0 .5rem;margin:.25rem;border-radius:3px}.markdown pre{overflow:scroll;background:#d3d3d3;border-left:4px solid red;padding:1em .5em}.markdown code{font-family:Fira Mono,DejaVu Sans Mono,Menlo,Consolas,Liberation Mono,Monaco,Lucida Console,monospace}</style><meta name="generator" content="Gatsby 2.32.3"/><title data-react-helmet="true">Logging best practices | Luke 10X</title><meta data-react-helmet="true" name="description" content="Full Stack Developer and Code Instructor"/><meta data-react-helmet="true" property="og:title" content="Logging best practices"/><meta data-react-helmet="true" property="og:description" content="Full Stack Developer and Code Instructor"/><meta data-react-helmet="true" property="og:type" content="website"/><meta data-react-helmet="true" property="og:url"/><meta data-react-helmet="true" property="og:image" content="/static/luke10x-8337dd5c233795156edb2256299abd21.png"/><meta data-react-helmet="true" name="twitter:card" content="summary"/><meta data-react-helmet="true" name="twitter:creator" content="@realLuke10X"/><meta data-react-helmet="true" name="twitter:title" content="Logging best practices"/><meta data-react-helmet="true" name="twitter:description" content="Full Stack Developer and Code Instructor"/><meta data-react-helmet="true" name="og:site_name" content="Logging best practices"/><meta data-react-helmet="true" name="twitter:image:alt" content="Logging best practices"/><meta data-react-helmet="true" name="fb:app_id" content="your_app_id"/><meta data-react-helmet="true" name="twitter:site" content="@website-username"/><link as="script" rel="preload" href="/webpack-runtime-bf56b49f2b5527a85341.js"/><link as="script" rel="preload" href="/framework-5e01c8af6b1735c9eaa3.js"/><link as="script" rel="preload" href="/app-da0fe1086453c5492255.js"/><link as="script" rel="preload" href="/styles-e9d24b1846c7d6eb9685.js"/><link as="script" rel="preload" href="/commons-cf5582d3bd626988a1c0.js"/><link as="script" rel="preload" href="/component---src-templates-blog-template-js-93f31a22bdab1b484673.js"/><link as="fetch" rel="preload" href="/page-data/blog/logging-best-practices/page-data.json" crossorigin="anonymous"/><link as="fetch" rel="preload" href="/page-data/sq/d/3649515864.json" crossorigin="anonymous"/><link as="fetch" rel="preload" href="/page-data/sq/d/63159454.json" crossorigin="anonymous"/><link as="fetch" rel="preload" href="/page-data/app-data.json" crossorigin="anonymous"/></head><body><div id="___gatsby"><div style="outline:none" tabindex="-1" id="gatsby-focus-wrapper"><div class="sc-gsTCUz bhdLno"><header class="sc-bdfBwQ cIKpxU"><div class="titles"><h1>LUKE 10X</h1><h3>Fullstack developer &amp; code instructor</h3></div></header><a href="/blog">back</a><div class="blog-post-container"><div class="blog-post"><h1>Logging best practices</h1><h2>March 17, 2017</h2><div class="markdown blog-post-content"><p>Logs can be of different types and purposes, like error, audit and debug logs.
+To work with them efficiently, we need to have certain tools and strategies.
+Here are several ideas how to use application logs more efficiently.  </p>
+<h2>1. Consider about audit logging early</h2>
+<p>Even if there is no specific business need for it,
+like regulatory requirements, it can be useful for troubleshooting,
+and debugging. To implement an audit log in a clean way, it is necessary
+to consider about it at the early stages of the architectural design.
+<a href="https://www.martinfowler.com/eaaDev/DomainEvent.html">Domain Events</a>
+should be clearly separated and logged, at some cases even
+<a href="https://www.martinfowler.com/eaaDev/EventSourcing.html">Event Sourcing</a>
+could be used.</p>
+<h2>2. Log Request ID and Correlation ID</h2>
+<p>HTTP provides request headers X-Request-ID and X-Correlation-ID,
+also comparable means can be used together with other protocols.
+Either generate it or make clients pass the request ID.
+Use same correlation ID in all downstream API calls.
+Using them in the logs, would enable filtering and could help
+to search for related events.</p>
+<h2>3. Include incident ID to the log messages</h2>
+<p>When things go wrong, users should be given with enough information
+required to indicate what is the problem when they ask for support.
+Exceptions should be logged, error message displayed to the user should
+indicate where the logs could be found.
+Of course there is no need to tell the user where the log file is stored,
+but it is useful to generate the same hash - incident ID, and include it
+both to the logged message and the one displayed for the user.</p>
+<h2>4. Implement 0 Bugs policy</h2>
+<p>All messages from the error log are considered bugs and must be resolved immediately.
+Log monitoring here is essential, tools should support easy real time monitoring,
+with ability to group and filter error messages.
+Noise should be removed from the error logs. When somebody is already looking at
+production issue, any messages related to that issue should not flood others.</p>
+<h2>5. Define tolerance thresholds</h2>
+<p>Some specific errors might only indicate problem when they occur continuously,
+for example some remote service timeouts could be tolerated, if the don't
+reach a threshold per time interval.
+Monitoring tools should support a way to filter repeated messages that are
+within tolerance limits for that type of errors.</p></div></div></div><footer><a href="/">Home</a> | <a href="/blog">Blog</a></footer></div></div><div id="gatsby-announcer" style="position:absolute;top:0;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border:0" aria-live="assertive" aria-atomic="true"></div></div><script id="gatsby-script-loader">/*<![CDATA[*/window.pagePath="/blog/logging-best-practices";/*]]>*/</script><script id="gatsby-chunk-mapping">/*<![CDATA[*/window.___chunkMapping={"polyfill":["/polyfill-e4957c11759bdfc149d9.js"],"app":["/app-da0fe1086453c5492255.js"],"component---src-pages-blog-js":["/component---src-pages-blog-js-bd586f0f8586ded14ba4.js"],"component---src-pages-index-js":["/component---src-pages-index-js-70f9e8f0d8a210722d88.js"],"component---src-templates-blog-template-js":["/component---src-templates-blog-template-js-93f31a22bdab1b484673.js"]};/*]]>*/</script><script src="/polyfill-e4957c11759bdfc149d9.js" nomodule=""></script><script src="/component---src-templates-blog-template-js-93f31a22bdab1b484673.js" async=""></script><script src="/commons-cf5582d3bd626988a1c0.js" async=""></script><script src="/styles-e9d24b1846c7d6eb9685.js" async=""></script><script src="/app-da0fe1086453c5492255.js" async=""></script><script src="/framework-5e01c8af6b1735c9eaa3.js" async=""></script><script src="/webpack-runtime-bf56b49f2b5527a85341.js" async=""></script></body></html>
